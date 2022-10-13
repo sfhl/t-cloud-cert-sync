@@ -1,0 +1,56 @@
+---
+
+include:
+  - file: 'scan-docker-image.yml'
+    project: 'shared/gitlab/trivy-scanner-template'
+
+image: docker:latest
+stages:
+  - build
+  - scan
+  - release
+
+services:
+  - docker:dind
+
+before_script:
+  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  - export REG_PREFIX="${CI_REGISTRY}/${CI_PROJECT_PATH}"
+  - export IMAGE_NAME="${REG_PREFIX}:${CI_COMMIT_REF_NAME}"
+  - export IMAGE_NAME_COMMIT="${IMAGE_NAME}-${CI_COMMIT_SHORT_SHA}"
+
+build:
+  stage: build
+  tags:
+    - dind
+  script:
+    - docker build --pull -t "${IMAGE_NAME_COMMIT}" --build-arg DOCKER_IMAGE_TAG=${CI_COMMIT_REF_NAME} .
+    - docker push "${IMAGE_NAME_COMMIT}"
+  except:
+    refs: [master, main]
+
+scan:
+  variables:
+    TRIVY_SCAN_IMAGE: "$CI_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    TRIVY_SCAN_SEVERITY_THRESHOLD: "Critical"
+  stage: scan
+  allow_failure: true
+  tags:
+    - dind
+  extends:
+    .scan-docker-image
+  needs: ["build"]
+  except:
+    refs: [master, main]
+
+release:
+  stage: release
+  tags:
+    - dind
+  script:
+    - docker pull "${IMAGE_NAME_COMMIT}"
+    - docker tag "${IMAGE_NAME_COMMIT}" "${IMAGE_NAME}"
+    - docker push "${IMAGE_NAME}"
+  needs: ["scan"]
+  except:
+    refs: [master, main]
