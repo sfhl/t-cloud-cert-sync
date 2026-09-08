@@ -1,0 +1,35 @@
+---
+
+replicaCount: 1
+
+image:
+  repository: git-images.mms-support.de/7009-03/shared/docker-images/otc-cert-sync
+  tag: "latest"
+  pullPolicy: Always
+
+# -- Erlaubt die Angabe von Secrets für private Container Registries
+# Beispiel:
+# imagePullSecrets:
+#   - name: my-registry-secret
+imagePullSecrets: []
+
+config:
+  otcRegion: "eu-de"
+  otcDomainName: "MEINE-OTC-DOMAIN"
+  otcProjectId: ""
+
+credentials:
+  existingSecret:
+    name: ""
+    accessKeyKey: "OS_ACCESS_KEY"
+    secretKeyKey: "OS_SECRET_KEY"
+  accessKey: ""
+  secretKey: ""
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi

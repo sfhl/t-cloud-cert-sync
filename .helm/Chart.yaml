@@ -1,0 +1,7 @@
+---
+
+apiVersion: v2
+name: otc-cert-sync
+description: Syncs cert-manager secrets to OTC ELB
+version: 0.1.0
+appVersion: "1.0.0"
