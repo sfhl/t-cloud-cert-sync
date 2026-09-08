@@ -25,8 +25,8 @@ import (
 )
 
 const (
-    AnnotationListenerID  = "otc.telekom.com/listener-id"
-    AnnotationSyncedState = "otc.telekom.com/synced-state" // NEW: persistent memory
+    AnnotationListenerID  = "t-cloud.telekom.com/listener-id"
+    AnnotationSyncedState = "t-cloud.telekom.com/synced-state" // NEW: persistent memory
 )
 
 // thread-safe cache for the certificate hashes/states
@@ -197,7 +197,7 @@ func handleSecretChange(k8sClient *kubernetes.Clientset, obj interface{}, elbCli
         // so that the controller does not get stuck.
         go func(certToDelete string, client *golangsdk.ServiceClient) {
             // Short pause, since load balancers operate asynchronously.
-            // If the certificate is deleted too quickly, OTC throws a "Resource in use" error.
+            // If the certificate is deleted too quickly, T Cloud throws a "Resource in use" error.
             time.Sleep(5 * time.Second)
 
             err := certificates.Delete(client, certToDelete).ExtractErr()

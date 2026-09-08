@@ -28,22 +28,22 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: OS_AUTH_URL
-              value: {{ printf "%s.%s.%s" "https://iam" .Values.config.otcRegion "otc.t-systems.com/v3" | quote }}
+              value: {{ printf "%s.%s.%s" "https://iam" .Values.config.tCloudRegion "otc.t-systems.com/v3" | quote }}
             - name: OS_REGION_NAME
-              value: {{ .Values.config.otcRegion | quote }}
+              value: {{ .Values.config.tCloudRegion | quote }}
             - name: OS_DOMAIN_NAME
-              value: {{ .Values.config.otcDomainName | quote }}
+              value: {{ .Values.config.tCloudDomainName | quote }}
             - name: OS_PROJECT_ID
-              value: {{ .Values.config.otcProjectId | quote }}
+              value: {{ .Values.config.tCloudProjectId | quote }}
             - name: OS_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ if .Values.credentials.existingSecret.name }}{{ .Values.credentials.existingSecret.name }}{{ else }}{{ .Release.Name }}-otc-credentials{{ end }}
+                  name: {{ if .Values.credentials.existingSecret.name }}{{ .Values.credentials.existingSecret.name }}{{ else }}{{ .Release.Name }}-t-cloud-credentials{{ end }}
                   key: {{ if .Values.credentials.existingSecret.name }}{{ .Values.credentials.existingSecret.accessKeyKey }}{{ else }}OS_ACCESS_KEY{{ end }}
             - name: OS_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ if .Values.credentials.existingSecret.name }}{{ .Values.credentials.existingSecret.name }}{{ else }}{{ .Release.Name }}-otc-credentials{{ end }}
+                  name: {{ if .Values.credentials.existingSecret.name }}{{ .Values.credentials.existingSecret.name }}{{ else }}{{ .Release.Name }}-t-cloud-credentials{{ end }}
                   key: {{ if .Values.credentials.existingSecret.name }}{{ .Values.credentials.existingSecret.secretKeyKey }}{{ else }}OS_SECRET_KEY{{ end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

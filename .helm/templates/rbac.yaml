@@ -1,5 +1,5 @@
 ---
-# Source: otc-cert-sync/templates/rbac.yaml
+# Source: t-cloud-cert-sync/templates/rbac.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -18,7 +18,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: otc-cert-sync
+  name: t-cloud-cert-sync
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

@@ -3,7 +3,7 @@
 replicaCount: 1
 
 image:
-  repository: git-images.mms-support.de/7009-03/shared/docker-images/otc-cert-sync
+  repository: git-images.mms-support.de/7009-03/shared/docker-images/t-cloud-cert-sync
   tag: "latest"
   pullPolicy: Always
 
@@ -14,9 +14,9 @@ image:
 imagePullSecrets: []
 
 config:
-  otcRegion: "eu-de"
-  otcDomainName: "MEINE-OTC-DOMAIN"
-  otcProjectId: ""
+  tCloudRegion: "eu-de"
+  tCloudDomainName: "MEINE-T-CLOUD-DOMAIN"
+  tCloudProjectId: ""
 
 credentials:
   existingSecret:

@@ -7,7 +7,7 @@ This Kubernetes controller dynamically monitors TLS certificates (Kubernetes Sec
 The controller uses Kubernetes Informers to detect changes to `Secret` resources across the cluster in real time (event-driven).
 For the controller to process a certificate, the Secret must be annotated with a specific annotation:
 
-`otc.telekom.com/listener-id: "<deine-elb-listener-uuid>"`
+`t-cloud.telekom.com/listener-id: "<deine-elb-listener-uuid>"`
 
 1. **Detection:** As soon as a secret is created or updated with this annotation (e.g., by `cert-manager`), the controller is triggered.
 2. **Caching:** It calculates a SHA256 hash of the certificate in combination with the listener ID. The T CLOUD PUBLIC API is only called if the certificate has actually been renewed or the listener ID has changed.
