@@ -7,6 +7,7 @@ import (
     "log"
     "os"
     "os/signal"
+    "regexp"
     "sync"
     "syscall"
     "time"
@@ -27,13 +28,33 @@ import (
 const (
     AnnotationListenerID  = "t-cloud.telekom.com/listener-id"
     AnnotationSyncedState = "t-cloud.telekom.com/synced-state" // NEW: persistent memory
+
+    // EnvKeepCertRegex names the env var holding the regex of certificate names to keep on cleanup.
+    EnvKeepCertRegex     = "KEEP_CERT_REGEX"
+    DefaultKeepCertRegex = "dummy"
 )
 
 // thread-safe cache for the certificate hashes/states
 var certHashes sync.Map
 
+// keepCertRegex matches certificate names that must be kept during cleanup, even if unused.
+// Compiled once at startup, read-only afterwards.
+var keepCertRegex *regexp.Regexp
+
 func main() {
     log.Println("Starting T Cloud Public ELB Cert Sync Controller...")
+
+    // 0. compile the "keep certificate" regex used during cleanup
+    keepCertPattern := os.Getenv(EnvKeepCertRegex)
+    if keepCertPattern == "" {
+        keepCertPattern = DefaultKeepCertRegex
+    }
+    var err error
+    keepCertRegex, err = regexp.Compile(keepCertPattern)
+    if err != nil {
+        log.Fatalf("Invalid %s regex %q: %v", EnvKeepCertRegex, keepCertPattern, err)
+    }
+    log.Printf("Certificates matching %q (%s) will be kept on cleanup, even if unused.", keepCertPattern, EnvKeepCertRegex)
 
     // 1. init K8s client
     k8sConfig, err := rest.InClusterConfig()
@@ -200,7 +221,16 @@ func handleSecretChange(k8sClient *kubernetes.Clientset, obj interface{}, elbCli
             // If the certificate is deleted too quickly, T Cloud throws a "Resource in use" error.
             time.Sleep(5 * time.Second)
 
-            err := certificates.Delete(client, certToDelete).ExtractErr()
+            // Check whether the certificate is protected from cleanup via KEEP_CERT_REGEX.
+            oldCert, err := certificates.Get(client, certToDelete).Extract()
+            if err != nil {
+                log.Printf("Cleanup-warning: Unable to fetch old certificate %s to check keep-pattern, attempting delete anyway: %v", certToDelete, err)
+            } else if keepCertRegex.MatchString(oldCert.Name) {
+                log.Printf("Cleanup: Certificate %s (name %q) matches %s pattern, skipping deletion.", certToDelete, oldCert.Name, EnvKeepCertRegex)
+                return
+            }
+
+            err = certificates.Delete(client, certToDelete).ExtractErr()
             if err != nil {
                 log.Printf("Cleanup-error: Unable to delete the old certificate %s from T Cloud Public: %v", certToDelete, err)
             } else {

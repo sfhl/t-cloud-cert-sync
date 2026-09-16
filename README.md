@@ -40,3 +40,4 @@ For the controller to process a certificate, the Secret must be annotated with a
 | `OS_PROJECT_ID` | id of the (sub-)Projekts | `29f93e92810d...` |
 | `OS_ACCESS_KEY` | T CLOUD PUBLIC Access Key (AK) | `ABCDEF...` |
 | `OS_SECRET_KEY` | T CLOUD PUBLIC Secret Key (SK) | `a1b2c3d4...` |
+| `KEEP_CERT_REGEX` | Regex matched against the certificate name. Matching certificates are kept during cleanup, even if no longer used. Default `dummy` | `^k8s-prod-.*` |
