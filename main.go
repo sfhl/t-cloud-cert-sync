@@ -31,7 +31,6 @@ const (
 
     // EnvKeepCertRegex names the env var holding the regex of certificate names to keep on cleanup.
     EnvKeepCertRegex     = "KEEP_CERT_REGEX"
-    DefaultKeepCertRegex = "dummy"
 )
 
 // thread-safe cache for the certificate hashes/states
@@ -46,9 +45,6 @@ func main() {
 
     // 0. compile the "keep certificate" regex used during cleanup
     keepCertPattern := os.Getenv(EnvKeepCertRegex)
-    if keepCertPattern == "" {
-        keepCertPattern = DefaultKeepCertRegex
-    }
     var err error
     keepCertRegex, err = regexp.Compile(keepCertPattern)
     if err != nil {

@@ -35,6 +35,8 @@ spec:
               value: {{ .Values.config.tCloudDomainName | quote }}
             - name: OS_PROJECT_ID
               value: {{ .Values.config.tCloudProjectId | quote }}
+            - name: KEEP_CERT_REGEX
+              value: {{ .Values.config.keepCertRegex | quote }}
             - name: OS_ACCESS_KEY
               valueFrom:
                 secretKeyRef:

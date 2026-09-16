@@ -17,6 +17,7 @@ config:
   tCloudRegion: "eu-de"
   tCloudDomainName: "MEINE-T-CLOUD-DOMAIN"
   tCloudProjectId: ""
+  keepCertRegex: "dummy"
 
 credentials:
   existingSecret:
