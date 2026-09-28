@@ -8,7 +8,7 @@ COPY main.go ./
 RUN CGO_ENABLED=0 GOOS=linux go build -mod=readonly -o t-cloud-cert-sync .
 
 # Run Stage
-FROM alpine:3.23
+FROM alpine:3.24
 RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /root/
 COPY --from=builder /app/t-cloud-cert-sync .
