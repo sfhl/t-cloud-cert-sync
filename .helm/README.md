@@ -7,7 +7,7 @@ Create a Kubernetes Secret named `t-cloud-credentials` in the release namespace 
 Add the GitHub Pages Helm repository and install the latest stable chart:
 
 ```bash
-helm repo add cert-sync https://sfhl.github.io/t-cloud-cert-sync/charts
+helm repo add cert-sync https://telekom-mms.github.io/t-cloud-cert-sync/charts
 helm repo update
 helm upgrade --install cert-sync cert-sync/t-cloud-cert-sync \
   --namespace cert-sync --create-namespace \
@@ -15,4 +15,4 @@ helm upgrade --install cert-sync cert-sync/t-cloud-cert-sync \
   --set credentials.existingSecret.name=t-cloud-credentials
 ```
 
-Enable GitHub Pages in the GitHub repository settings with **GitHub Actions** as the build and deployment source. The chart repository becomes available after the next non-prerelease `v*` release. Run `helm repo update` before upgrades to discover newer charts; omit `--version` to select the latest stable chart. The chart defaults to `ghcr.io/sfhl/t-cloud-cert-sync:latest`. For a fixed deployment, set `--version` on the Helm command and `image.tag` to the matching `v` tag. Replace the project ID and override `image.repository` if using a fork or another registry. Set `config.tCloudRegion` if the project is not in `eu-de`. `config.keepCertRegex` defaults to `dummy`: certificates whose names match this regex will not be removed during cleanup. If your image is private, supply `imagePullSecrets`.
+Enable GitHub Pages in the GitHub repository settings with **GitHub Actions** as the build and deployment source. The chart repository becomes available after the next non-prerelease `v*` release. Run `helm repo update` before upgrades to discover newer charts; omit `--version` to select the latest stable chart. The chart defaults to `ghcr.io/telekom-mms/t-cloud-cert-sync:latest`. For a fixed deployment, set `--version` on the Helm command and `image.tag` to the matching `v` tag. Replace the project ID and override `image.repository` if using a fork or another registry. Set `config.tCloudRegion` if the project is not in `eu-de`. `config.keepCertRegex` defaults to `dummy`: certificates whose names match this regex will not be removed during cleanup. If your image is private, supply `imagePullSecrets`.
