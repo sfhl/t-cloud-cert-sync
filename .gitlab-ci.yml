@@ -1,0 +1,90 @@
+---
+
+include:
+  - {file: 'scan-docker-image.yml', project: 'shared/gitlab/trivy-scanner-template'}
+  - {file: ['helm.yml'], project: 'shared/gitlab/linting', ref: master}
+
+image: docker:latest
+stages: [linting, build, scan, release]
+
+.rules:
+  rules:
+    - if: '$CI_COMMIT_BRANCH != "master"'
+
+.linting_rules:
+  rules:
+    - !reference [.rules, rules]
+    - {if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH", allow_failure: true}
+    - {if: "$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH", allow_failure: true}
+
+helm:
+  before_script: []
+  stage: linting
+  rules:
+    - !reference [.linting_rules, rules]
+    - if: "$CI_PIPELINE_SOURCE == 'push'"
+
+before_script:
+  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  - export REG_PREFIX="${CI_REGISTRY}/${CI_PROJECT_PATH}"
+  - export IMAGE_NAME="${REG_PREFIX}:${CI_COMMIT_REF_NAME}"
+  - export IMAGE_NAME_COMMIT="${IMAGE_NAME}-${CI_COMMIT_SHORT_SHA}"
+
+build image:
+  stage: build
+  tags: [dind]
+  script:
+    - docker build --pull -t "${IMAGE_NAME_COMMIT}" --build-arg DOCKER_IMAGE_TAG=${CI_COMMIT_REF_NAME} .
+    - docker push "${IMAGE_NAME_COMMIT}"
+  rules:
+    - !reference [.rules, rules]
+
+build chart:
+  stage: build
+  image: dtzar/helm-kubectl:3.18.6
+  artifacts: {paths: [./build/], expire_in: 1 week}
+  tags: [dind]
+  before_script: []
+  script:
+    - helm package ./.helm -d ./build/
+  needs: [helm]
+  rules:
+    - !reference [.rules, rules]
+
+scan image:
+  variables:
+    TRIVY_SCAN_IMAGE: "$CI_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    TRIVY_SCAN_SEVERITY_THRESHOLD: "Critical"
+    # TRIVY_SERVER: "https://trivy.coc09.mms-support.de"
+  stage: scan
+  allow_failure: true
+  tags: [dind]
+  extends: .scan-docker-image
+  needs: ['build image']
+  rules:
+    - !reference [.rules, rules]
+
+release image:
+  stage: release
+  tags: [dind]
+  script:
+    - docker pull "${IMAGE_NAME_COMMIT}"
+    - docker tag "${IMAGE_NAME_COMMIT}" "${IMAGE_NAME}"
+    - docker push "${IMAGE_NAME}"
+  needs: [scan image]
+  rules:
+    - !reference [.rules, rules]
+
+release chart:
+  stage: release
+  image: git-images.mms-support.de/7009-03/shared/docker-images/alpine:base
+  tags: [dind]
+  before_script: []
+  script:
+    - export CHART=$(ls -A "./build/")
+    - echo "$CHART@$RELEASE_CHANNEL"
+    - curl --fail-with-body --request POST --user gitlab-ci-token:$CI_JOB_TOKEN
+      --form "chart=@./build/${CHART}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/api/$RELEASE_CHANNEL/charts"
+  needs: ['build chart']
+  rules:
+    - {if: $CI_COMMIT_BRANCH != "master", variables: {RELEASE_CHANNEL: "${CI_COMMIT_REF_NAME}"}}
