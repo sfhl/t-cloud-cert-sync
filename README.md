@@ -1,43 +1,35 @@
-# T CLOUD PUBLIC ELB Certificate Sync Controller
+# T Cloud ELB Certificate Sync Controller
 
-This Kubernetes controller dynamically monitors TLS certificates (Kubernetes Secrets) within the cluster and automatically synchronizes them with **T CLOUD PUBLIC**. It uploads renewed certificates and binds them to the configured Elastic Load Balancer (ELB v3) listener with zero downtime.
+This Kubernetes controller watches TLS Secrets annotated with `t-cloud.telekom.com/listener-id: "<listener-uuid>"`. When the certificate changes, it uploads the new certificate to T Cloud ELB v3 and binds it to that listener. It remembers successful syncs in a Secret annotation.
 
-## how it's worikng
+The previous certificate is deleted after a successful bind unless its name matches `KEEP_CERT_REGEX`. If the certificate name cannot be checked, cleanup is skipped. The controller needs cluster-wide access to Secrets; deploy it only in a trusted cluster.
 
-The controller uses Kubernetes Informers to detect changes to `Secret` resources across the cluster in real time (event-driven).
-For the controller to process a certificate, the Secret must be annotated with a specific annotation:
+## Install
 
-`t-cloud.telekom.com/listener-id: "<deine-elb-listener-uuid>"`
+Use a Kubernetes cluster with cert-manager or another source of TLS Secrets, a T Cloud project, and a published container image. Create a Kubernetes Secret in the controller's namespace containing `OS_ACCESS_KEY` and `OS_SECRET_KEY`. The [Helm chart](.helm/README.md) documents installation with an existing Secret and an explicit image tag.
 
-1. **Detection:** As soon as a secret is created or updated with this annotation (e.g., by `cert-manager`), the controller is triggered.
-2. **Caching:** It calculates a SHA256 hash of the certificate in combination with the listener ID. The T CLOUD PUBLIC API is only called if the certificate has actually been renewed or the listener ID has changed.
-3. **Upload & Bind:** The new certificate is uploaded to T CLOUD PUBLIC and bound to the specified listener as the default TLS certificate.
+## Development
 
-*Note on T CLOUD PUBLIC authentication: The application uses pure AK/SK signatures and communicates directly with the ELB endpoint. This eliminates IAM token issues (especially in sub-projects) due to system constraints.*
+Go 1.23.12 or newer is required. The controller itself uses in-cluster Kubernetes credentials.
 
-## Prerequisites
+```bash
+go test -mod=readonly ./...
+docker build -t t-cloud-cert-sync:dev .
+```
 
-- Go 1.23+ (for local development)
-- Docker
-- Open Telekom Cloud Access Key (AK) and Secret Key (SK)
+## Configuration
 
-## Local Development & Build
+| Variable | Description |
+|---|---|
+| `OS_AUTH_URL` | Identity endpoint, e.g. `https://iam.eu-de.otc.t-systems.com/v3` |
+| `OS_REGION_NAME` | T Cloud region, e.g. `eu-de` |
+| `OS_PROJECT_ID` | T Cloud project ID |
+| `OS_ACCESS_KEY` | T Cloud access key (from a Kubernetes Secret) |
+| `OS_SECRET_KEY` | T Cloud secret key (from a Kubernetes Secret) |
+| `KEEP_CERT_REGEX` | Regex matched against old certificate names before cleanup; default `dummy`. An invalid regex stops startup. |
 
-1. Download dependencies:
-   ```bash
-   go mod tidy
+## Releases
 
-2. Run the application locally (with environment variables for T CLOUD PUBLIC access):
-   ```bash
-   docker build -t your-repo/t-cloud-cert-sync:latest .
+GitHub Actions runs tests, lints the chart, and builds the image on pull requests and pushes. A `v*` tag publishes the image to GHCR and attaches the Helm chart to a GitHub release. Set the GHCR package visibility to public before using the chart without registry credentials; the repository owner must authorize publication of the code and images.
 
-## Environment Variables
-
-| Variable | Description | Example |
-|---|---|---|
-| `OS_AUTH_URL` | T CLOUD PUBLIC Identity Endpoint | `https://iam.eu-de.t cloud public.t-systems.com/v3` |
-| `OS_REGION_NAME` | T CLOUD PUBLIC Region | `eu-de` |
-| `OS_PROJECT_ID` | id of the (sub-)Projekts | `29f93e92810d...` |
-| `OS_ACCESS_KEY` | T CLOUD PUBLIC Access Key (AK) | `ABCDEF...` |
-| `OS_SECRET_KEY` | T CLOUD PUBLIC Secret Key (SK) | `a1b2c3d4...` |
-| `KEEP_CERT_REGEX` | Regex matched against the certificate name. Matching certificates are kept during cleanup, even if no longer used. Default `dummy` | `^k8s-prod-.*` |
+Licensed under [GPL-3.0](LICENSE).
