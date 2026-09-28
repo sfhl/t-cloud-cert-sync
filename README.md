@@ -6,7 +6,7 @@ The previous certificate is deleted after a successful bind unless its name matc
 
 ## Install
 
-Use a Kubernetes cluster with cert-manager or another source of TLS Secrets, a T Cloud project, and a published container image. Create a Kubernetes Secret in the controller's namespace containing `OS_ACCESS_KEY` and `OS_SECRET_KEY`. The [Helm chart](.helm/README.md) documents installation with an existing Secret and an explicit image tag.
+Use a Kubernetes cluster with cert-manager or another source of TLS Secrets, a T Cloud project, and a published container image. Create a Kubernetes Secret in the controller's namespace containing `OS_ACCESS_KEY` and `OS_SECRET_KEY`. The [Helm chart](.helm/README.md) documents installation from the GitHub Pages Helm repository with an existing Secret.
 
 ## Development
 
@@ -30,6 +30,6 @@ docker build -t t-cloud-cert-sync:dev .
 
 ## Releases
 
-GitHub Actions runs tests, lints the chart, and builds the image on pull requests and pushes. A `v*` tag publishes the image to GHCR and attaches the Helm chart to a GitHub release. Set the GHCR package visibility to public before using the chart without registry credentials; the repository owner must authorize publication of the code and images.
+GitHub Actions runs tests, lints the chart, and builds the image on pull requests and pushes. A `v*` tag publishes the image to GHCR, attaches the Helm chart to a GitHub release, and updates the GitHub Pages Helm repository. Enable Pages with GitHub Actions as its source before the first chart repository deployment. Set the GHCR package visibility to public before using the chart without registry credentials; the repository owner must authorize publication of the code and images.
 
 Licensed under [GPL-3.0](LICENSE).
