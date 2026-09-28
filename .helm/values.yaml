@@ -3,7 +3,7 @@
 replicaCount: 1
 
 image:
-  repository: ""
+  repository: ghcr.io/telekom-mms/t-cloud-cert-sync
   tag: ""
   pullPolicy: Always
 
