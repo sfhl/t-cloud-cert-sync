@@ -3,8 +3,8 @@
 replicaCount: 1
 
 image:
-  repository: git-images.mms-support.de/7009-03/shared/docker-images/t-cloud-cert-sync
-  tag: "latest"
+  repository: ""
+  tag: ""
   pullPolicy: Always
 
 # -- Erlaubt die Angabe von Secrets für private Container Registries

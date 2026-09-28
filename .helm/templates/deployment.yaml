@@ -24,7 +24,7 @@ spec:
       serviceAccountName: {{ .Release.Name }}-sa
       containers:
         - name: sync-app
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ required "image.repository must point to the published container image" .Values.image.repository }}:{{ required "image.tag must specify a release version" .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: OS_AUTH_URL
