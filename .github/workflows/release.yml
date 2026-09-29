@@ -82,7 +82,7 @@ jobs:
           helm repo index site/charts --url "https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${repo}/charts"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
